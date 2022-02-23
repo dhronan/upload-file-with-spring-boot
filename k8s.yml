@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fileupload-dep
+  labels:
+    app: fileupload-dep
+spec:
+  selector:
+    matchLabels:
+      app: fileupload-pod
+  revisionHistoryLimit: 1
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: fileupload-pod
+    spec:
+      containers:
+        - name: fileupload-container
+          image: dhronan/spring-file-app
+          imagePullPolicy: Always
+          ports:
+           - containerPort: 9292
+          env:
+           - name: JAVA_OPTIONS
+             value: "-Dspring.profiles.active=okteto"
+---
+                
+kind: Service
+apiVersion: v1
+metadata:
+  name:  fileupload-svc
+spec:
+  selector:
+    app:  fileupload-pod
+  ports:
+  - port: 80
+    targetPort: 9000
+    
+
+
+    
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fileupload-ingress
+  annotations:
+    dev.okteto.com/generate-host: "true"
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: fileupload-svc
+                port: 
+                    number: 80
+               
